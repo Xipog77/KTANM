@@ -1,0 +1,18 @@
+{
+  "hash": "4a897df9e000b652",
+  "crash_type": "signal",
+  "subtype": "signal-6",
+  "exit_code": -6,
+  "version": "3.30.1",
+  "error_message": "",
+  "sql_preview": "CREATE TABLE IF NOT EXISTS t3 (c1 REAL CHECK (EXISTS (WITH RECURSIVE t1 (_rowid_) AS (VALUES (CURRENT_TIME)) VALUES (TRUE) UNION SELECT * FROM t2 GROUP BY CURRENT_DATE WINDOW w1 AS () ORDER BY FALSE C",
+  "campaigns": [
+    "sqlite-3.30.1_comparison_ebnf_run3",
+    "sqlite-3.30.1_uniform_run4"
+  ],
+  "total_count": 3,
+  "sample_file": "6_000085914",
+  "bug_class": "BC005",
+  "cve": null,
+  "severity": "MEDIUM"
+}

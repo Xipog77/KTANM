@@ -1,0 +1,36 @@
+# Ignore the large zip file
+KTANM.zip
+
+# Ignore AFL++ source and build folder
+AFLplusplus-5.00c/
+
+# Ignore compiled binaries in the lab directory
+sqlite_fuzz_lab/sqlite_fuzzer
+sqlite_fuzz_lab/mysql_fuzzer
+sqlite_fuzz_lab/postgres_fuzzer
+sqlite_fuzz_lab/*.so
+sqlite_fuzz_lab/*.o
+sqlite_fuzz_lab/*.a
+
+# Ignore DBMS source codes, build directories and installations
+sqlite_fuzz_lab/mysql-8.0.20/
+sqlite_fuzz_lab/mysql_install/
+sqlite_fuzz_lab/openssl-1.1.1w/
+sqlite_fuzz_lab/openssl_install/
+sqlite_fuzz_lab/postgresql-12.2/
+sqlite_fuzz_lab/pg_install/
+sqlite_fuzz_lab/sqlite_3.34/
+sqlite_fuzz_lab/sqlite_3.44/
+sqlite_fuzz_lab/boost/
+sqlite_fuzz_lab/pg_data/
+
+# Ignore fuzzing campaign outputs
+sqlite_fuzz_lab/outputs/
+
+# Ignore OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~

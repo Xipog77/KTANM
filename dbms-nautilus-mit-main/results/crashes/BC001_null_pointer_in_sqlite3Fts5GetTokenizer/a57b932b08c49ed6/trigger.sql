@@ -1,0 +1,2 @@
+PRAGMA wal_checkpoint(RESTART);
+CREATE VIRTUAL TABLE IF NOT EXISTS fts_t1 USING fts5(_rowid_);
