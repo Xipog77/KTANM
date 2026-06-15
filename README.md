@@ -15,7 +15,7 @@ Tài liệu này hướng dẫn nhanh cách biên dịch và chạy chiến dị
 ## 1. Chuẩn Bị Môi Trường
 
 > [!IMPORTANT]
-> Các lệnh và kịch bản dưới đây sử dụng đường dẫn tuyệt đối `/home/dokhanh/Desktop/data/Lab/KTANM/`. Nếu bạn chạy trên một máy tính hoặc thư mục khác, hãy thay đổi đường dẫn này thành đường dẫn tương ứng trên hệ thống của bạn.
+> Nếu bạn chạy trên một máy tính hoặc thư mục khác, hãy thay đổi đường dẫn tuyệt đối thành đường dẫn tương ứng trên hệ thống của bạn.
 
 ### A. Cài đặt các gói phụ thuộc hệ thống
 ```bash
@@ -41,7 +41,7 @@ Sau khi biên dịch thành công, liên kết động `libgrammarmutator-sql.so
 
 ### D. Cấu hình Tài Nguyên
 * **Fuzzer Core**: AFL++ (Sử dụng trình biên dịch `afl-clang-fast` / `afl-clang-fast++`)
-* **Mutator**: `/home/dokhanh/Desktop/data/Lab/KTANM/Grammar-Mutator/libgrammarmutator-sql.so`
+* **Mutator**: `Grammar-Mutator/libgrammarmutator-sql.so`
 * **Dữ liệu**: Hạt giống tại `inputs/`, kết quả lưu tại `outputs/`
 
 ---
@@ -56,7 +56,7 @@ Sau khi biên dịch thành công, liên kết động `libgrammarmutator-sql.so
 2. **Khởi chạy**:
    ```bash
    env AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
-   AFL_CUSTOM_MUTATOR_LIBRARY=/home/dokhanh/Desktop/data/Lab/KTANM/Grammar-Mutator/libgrammarmutator-sql.so \
+   AFL_CUSTOM_MUTATOR_LIBRARY=/Grammar-Mutator/libgrammarmutator-sql.so \
    AFL_CUSTOM_MUTATOR_ONLY=1 \
    AFL_CUSTOM_INFO_PROGRAM=./sqlite_fuzzer \
    AFL_CUSTOM_INFO_PROGRAM_ARGV="" \
@@ -79,7 +79,7 @@ Sau khi biên dịch thành công, liên kết động `libgrammarmutator-sql.so
   2. Khởi chạy:
      ```bash
      env AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
-     AFL_CUSTOM_MUTATOR_LIBRARY=/home/dokhanh/Desktop/data/Lab/KTANM/Grammar-Mutator/libgrammarmutator-sql.so \
+     AFL_CUSTOM_MUTATOR_LIBRARY=/Grammar-Mutator/libgrammarmutator-sql.so \
      AFL_CUSTOM_MUTATOR_ONLY=1 \
      AFL_CUSTOM_INFO_PROGRAM=./postgres_fuzzer \
      AFL_CUSTOM_INFO_PROGRAM_ARGV="" \
@@ -96,19 +96,73 @@ Khởi chạy tự động (quản lý daemon `mysqld` và cổng socket riêng 
 
 ---
 
-## 3. Các Lệnh Bảo Trì Thường Dùng
+## 3. Hướng Dẫn Biên Dịch DBMS từ Nguồn
 
-* **Dọn dẹp tiến trình treo nền**:
+### A. Biên dịch OpenSSL (Phụ thuộc tĩnh của MySQL)
+MySQL yêu cầu thư viện SSL. Ta tiến hành biên dịch tĩnh OpenSSL bằng `afl-clang-fast`:
+1. Di chuyển vào thư mục nguồn OpenSSL:
+   ```bash
+   cd sqlite_fuzz_lab/openssl-1.1.1w
+   ```
+2. Cấu hình và cài đặt:
+   ```bash
+   CC=afl-clang-fast ./config --prefix=$(pwd)/../openssl_install no-shared no-tests
+   make -j$(nproc)
+   make install
+   ```
+
+### B. Biên dịch MySQL 8.0.20
+MySQL yêu cầu thư viện Boost và OpenSSL tĩnh vừa cài đặt ở trên:
+1. Tạo thư mục build và di chuyển vào:
+   ```bash
+   cd sqlite_fuzz_lab/mysql-8.0.20
+   mkdir -p build && cd build
+   ```
+2. Cấu hình bằng `cmake` sử dụng các trình biên dịch của AFL++:
+   ```bash
+   CC=afl-clang-fast CXX=afl-clang-fast++ cmake .. \
+     -DCMAKE_INSTALL_PREFIX=$(pwd)/../../mysql_install \
+     -DWITH_BOOST=$(pwd)/../../boost \
+     -DWITH_SSL=$(pwd)/../../openssl_install \
+     -DFORCE_UNSUPPORTED_COMPILER=ON \
+     -DDEFAULT_CHARSET=utf8 \
+     -DDEFAULT_COLLATION=utf8_general_ci
+   ```
+3. Biên dịch và cài đặt:
+   ```bash
+   make -j$(nproc)
+   make install
+   ```
+
+### C. Biên dịch PostgreSQL 12.2
+PostgreSQL được cấu hình không sử dụng `readline` và `zlib` để tối ưu cho việc fuzzing qua Single-User mode:
+1. Di chuyển vào thư mục nguồn PostgreSQL:
+   ```bash
+   cd sqlite_fuzz_lab/postgresql-12.2
+   ```
+2. Cấu hình với trình biên dịch AFL++:
+   ```bash
+   CC=afl-clang-fast CXX=afl-clang-fast++ ./configure \
+     --prefix=$(pwd)/../pg_install \
+     --without-readline \
+     --without-zlib
+   ```
+3. Biên dịch và cài đặt:
+   ```bash
+   make -j$(nproc)
+   make install
+   ```
+
+### D. Chọn phiên bản SQLite 3
+Có thể chuyển đổi linh hoạt giữa SQLite 3.34 và SQLite 3.44 bằng cách thay đổi liên kết động `sqlite_src`:
+* **Chọn SQLite 3.34 (Mặc định)**:
   ```bash
-  pkill -f mysql_fuzzer
-  pkill -f mysql_install/bin/mysqld
-  pkill -f postgres_fuzzer
+  cd sqlite_fuzz_lab
+  ln -sf sqlite_3.34 sqlite_src
   ```
-* **Sửa lỗi phân quyền thư mục kết quả (Permission Denied)**:
+* **Chọn SQLite 3.44**:
   ```bash
-  sudo chown -R $USER:$USER /home/dokhanh/Desktop/data/Lab/KTANM/sqlite_fuzz_lab/outputs/
+  cd sqlite_fuzz_lab
+  ln -sf sqlite_3.44 sqlite_src
   ```
-* **Vẽ đồ thị giám sát hiệu năng**:
-  ```bash
-  afl-plot outputs/sqlite_fuzzer01 outputs/sqlite_fuzzer01/plot
-  ```
+Sau khi chuyển đổi, tiến hành biên dịch lại harness theo chỉ dẫn ở **Mục 2.A**.
