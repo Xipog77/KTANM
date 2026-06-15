@@ -13,6 +13,33 @@
 Tài liệu này hướng dẫn nhanh cách biên dịch và chạy chiến dịch Fuzzing trên SQLite 3, MySQL 8.0.20, và PostgreSQL 12.2 bằng **AFL++** kết hợp **Nautilus Custom SQL Mutator**.
 
 ## 1. Chuẩn Bị Môi Trường
+
+> [!IMPORTANT]
+> Các lệnh và kịch bản dưới đây sử dụng đường dẫn tuyệt đối `/home/dokhanh/Desktop/data/Lab/KTANM/`. Nếu bạn chạy trên một máy tính hoặc thư mục khác, hãy thay đổi đường dẫn này thành đường dẫn tương ứng trên hệ thống của bạn.
+
+### A. Cài đặt các gói phụ thuộc hệ thống
+```bash
+sudo apt update
+sudo apt install -y build-essential python3-dev pip clang lld llvm llvm-dev libclang-dev ninja-build valgrind uuid-dev default-jre python3
+```
+
+### B. Biên dịch và Cài đặt AFL++
+```bash
+cd AFLplusplus-5.00c
+make clean
+make distrib
+sudo make install
+```
+
+### C. Biên dịch Custom SQL Mutator (Grammar-Mutator)
+```bash
+cd Grammar-Mutator
+make clean
+make GRAMMAR_FILE=sql_grammar.json
+```
+Sau khi biên dịch thành công, liên kết động `libgrammarmutator-sql.so` sẽ được tạo ra tại thư mục `Grammar-Mutator/`.
+
+### D. Cấu hình Tài Nguyên
 * **Fuzzer Core**: AFL++ (Sử dụng trình biên dịch `afl-clang-fast` / `afl-clang-fast++`)
 * **Mutator**: `/home/dokhanh/Desktop/data/Lab/KTANM/Grammar-Mutator/libgrammarmutator-sql.so`
 * **Dữ liệu**: Hạt giống tại `inputs/`, kết quả lưu tại `outputs/`
